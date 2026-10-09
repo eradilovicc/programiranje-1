@@ -82,7 +82,7 @@ let primer_vektorji_6 = normirani [3.0; 4.0]
  izračuna projekcijo prvega vektorja na drugega.
 [*----------------------------------------------------------------------------*)
 
-let projekcija _ _ = ()
+let projekcija u v = razteg (skalarni_produkt u v /. norma v ** 2.0 ) v
 
 let primer_vektorji_7 = projekcija [3.0; 4.0] [1.0; 0.0]
 (* val primer_vektorji_7 : float list = [3.; 0.] *)
@@ -122,7 +122,12 @@ let primer_html_2 = zamakni 4 "Hello,\nworld!"
  niz, ki predstavlja ustrezno zamaknjen neurejeni seznam v HTML-ju:
 [*----------------------------------------------------------------------------*)
 
-let ul seznam = ()
+let ul seznam = 
+  "<ul>\n   " ^
+  ( seznam
+  |> List.map (fun beseda -> "<li>" ^ beseda ^ "</li>") 
+  |> String.concat "\n  " )
+  ^ "\n</ul>"
 
 let primer_html_3 = ul ["ananas"; "banana"; "čokolada"]
 (* val primer_html_3 : string =
@@ -180,7 +185,29 @@ let primer_seznam_3 =
  znesek nakupa.
 [*----------------------------------------------------------------------------*)
 
-let izracunaj_skupni_znesek _ _ = ()
+let izracunaj_skupni_znesek seznam cenik =
+  let cenik_pari = pretvori_v_seznam_parov cenik in
+  let nakup_pari = pretvori_v_seznam_parov seznam in
+  
+  let vmesni_zneski = 
+    List.map (fun (artikel, kolicina_str) ->
+      try
+        (* Pretvorimo količino iz stringa v float *)
+        let kolicina = float_of_string kolicina_str in
+        
+        (* Poiščemo ceno artikla (ki je prav tako string, zato jo pretvorimo) *)
+        let cena_str = List.assoc artikel cenik_pari in
+        let cena = float_of_string cena_str in
+        
+        kolicina *. cena
+      with 
+      | Not_found -> 0.0          (* Če artikla ni na ceniku *)
+      | Failure _ -> 0.0          (* Če pretvorba float_of_string spodleti *)
+    ) nakup_pari
+  in
+  
+  List.fold_left (+.) 0.0 vmesni_zneski
+
 
 let primer_seznam_4 = 
   let nakupovalni_seznam = "mleko, 2\njabolka, 5"
