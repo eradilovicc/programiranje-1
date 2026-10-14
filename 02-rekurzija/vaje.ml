@@ -205,7 +205,15 @@ let primer_unzip_1 = unzip [(0,"a"); (1,"b"); (2,"c")]
  Funkcija `unzip_tlrec` je repno rekurzivna različica funkcije `unzip`.
 [*----------------------------------------------------------------------------*)
 
-let unzip_tlrec _ = ()
+let unzip_tlrec sez =
+  let rec aux (levi_acc, desni_acc) seznam =
+  match seznam with
+  | [] -> (List.rev levi_acc, List.rev desni_acc)
+  | (x, y) :: rest -> aux (x :: levi_acc, y :: desni_acc) rest
+
+  in
+  aux ([], []) sez
+
 
 let primer_unzip_2 = unzip_tlrec [(0,"a"); (1,"b"); (2,"c")]
 (* val primer_unzip_2 : int list * string list = ([0; 1; 2], ["a"; "b"; "c"]) *)
@@ -244,7 +252,17 @@ let primer_loop = loop (fun x -> x < 10) ((+) 4) 4
  ... xn)`. V primeru seznama z manj kot dvema elementoma naj vrne napako.
 [*----------------------------------------------------------------------------*)
 
-let rec fold_left_no_acc _ _ = ()
+let rec fold_left_no_acc f seznam = 
+  match seznam with
+  | [] -> failwith "Napaka"
+  | x :: [] -> failwith "Napaka"
+  | x :: y :: ys -> 
+    let rec loop acc rest =
+      match rest with
+      | [] -> acc
+      | z :: zs -> loop (f acc z) zs
+    in
+    loop (f x y) ys
 
 let primer_fold_left_no_acc =
   fold_left_no_acc (^) ["F"; "I"; "C"; "U"; "S"]
@@ -260,7 +278,15 @@ let primer_fold_left_no_acc =
  x]`. Funkcija naj bo repno rekurzivna.
 [*----------------------------------------------------------------------------*)
 
-let apply_sequence _ _ _ = ()
+let apply_sequence f x n =
+  let rec aux trenutni_x acc stevec =
+    if stevec = 0 then
+      List.rev (trenutni_x :: acc)
+    else
+      aux (f trenutni_x) (trenutni_x :: acc) (stevec - 1)
+  in
+  if n < 0 then [] else aux x [] n
+
 
 let primer_apply_sequence_1 = apply_sequence (fun x -> x * x) 2 5
 (* val primer_apply_sequence_1 : int list = [2; 4; 16; 256; 65536; 4294967296] *)
