@@ -33,6 +33,35 @@
  časovna zahtevnost funkcije?
 [*----------------------------------------------------------------------------*)
 
+(*----------------------------------------------------------------------------*
+vse funkcije nenegativne
+1. h element O -> a*h element O za vsak a > 0
+  dokaz: C' = Ca, n0' = n0 in po izračunu vidmo da res 
+  isto velja za theta 
+2. h elemet O(f) -> h elemnt O(f + g) za vsako g 
+  dokaz: C, n0 ista. h(n) <= Cf(n) po predpostavki <= C(f(n) + g(n))
+  za theta: to ne velja. recimo f = n, g = n^2. h < n in hkrati nekje bi mogu bit 
+  n + n^^2 < h torej -><-.
+3. f1 element O(g1) in f2 element O(g2) -> f1 + f2 element O(g1 + g2)
+  dokaz: C = max{C1, C2}, n0 = max{n1, n2} in dleuje
+  theta: min{c1, c2} pa max{n1, n2} za omega
+4. isto sam produkt, torej ena je znotraj druge (npr v zanki kličemo drugo funkcijo)
+  dokaz: isto, C = C1*C2
+5. maksiamlna bo prevladala in manjša ne bo mogla vplivat na časovno zahtevnost.
+    max{f1, f2} <= f1 + f2 <= 2max{f1, f2} in pol je f1 + f2 element O(max{f1, f2})
+    in od omega
+6. n(n + 1)/2 element omega(n^^2)
+    dokaz: vemo da n elemnt theta(n) in n^^2 elemnt theta(n^^2)
+    uno zgori = n^^2/2 + n/2 element theta(n^^2 + n) torej po 5. je elemnt theta(n^^2) 
+7. logbn = C*log2n
+8. log2(n!) element theta(nlogn)
+    1O) n^^n > n!
+    2O) nlogn = logn^^n >= logn!
+    1theta) (n/2)^^(n/2) <= n!, ker je pač pol členov če daš na pol večjih od unih v fakulteti,
+    zato smo te člene omejil. (nlog(n) -1)/2 <= logn! in pač od prej vemo da lah uno
+    polovico in -1 pozabimo
+[*----------------------------------------------------------------------------*)
+
 let min_and_rest _ = ()
 
 let primer_min_and_rest = min_and_rest [3; 1; 2; 1]
@@ -76,7 +105,15 @@ let primer_selection_sort = selection_sort [3; 2; 5; 9; 1; 7; 4; 3]
  na mestu in vrne naj `unit`.
 [*----------------------------------------------------------------------------*)
 
-let swap _ _ _ = ()
+(* a.(i) dostop do indeksa, tip int, če seznam int
+   a.(i) <- n n gre na ito mesto, tip unit, ker sam spremeni, zato pred takimi operacimajmi,
+   ki vračajo unit napišemo ;
+   časovna zahtevnost: O(1)*)
+
+let swap a i j = 
+  let v = a.(i) in
+  a.(i) <- a.(j);
+  a.(j) <- v
 
 let primer_swap =
   let test = [|0; 1; 2; 3; 4|] in
@@ -89,8 +126,20 @@ let primer_swap =
  `a` med indeksoma `lower` in `upper` (oba indeksa sta vključena).
 [*----------------------------------------------------------------------------*)
 
-let index_min _ _ _ = ()
+let index_min a lower upper = 
+  let rec aux indeks indeks_minimuma = 
+    if indeks > upper then indeks_minimuma
+    else
+      let new_i_min = (
+        if a.(indeks) < a.(indeks_minimuma) then indeks else indeks_minimuma
+      ) in
+      aux (indeks + 1) new_i_min
+  in
+  aux lower lower
 
+(* časovna zahtevnost: mamo 4 operacije, ampak vse te operacije same po sebi so O(1)
+  T(n) =~ O(1) + T(n - 1) = O(n)
+  n je velikost vhoda, za naš aux je upper - i *)
 let primer_index_min = index_min [|0; 2; 9; 3; 6|] 2 4
 (* val primer_index_min : int = 3 *)
 
@@ -99,7 +148,18 @@ let primer_index_min = index_min [|0; 2; 9; 3; 6|] 2 4
  Kakšna je njena časovna zahtevnost?
 [*----------------------------------------------------------------------------*)
 
-let selection_sort_array _ = ()
+(* časovna zahtevnost: T(n) ~ n + (n-1) + (n-2) + ... = n(n+1)/2 = O(n^^2) *)
+
+let selection_sort_array a =
+  let n = Array.length a in (* O(1) *)
+  let rec aux unsorted =
+    if unsorted > (n - 1) then ()
+    else
+      let i_min = index_min a unsorted (n - 1) in (* O(k), k dolžina seznama *)
+      swap a unsorted i_min;
+      aux (unsorted - 1) 
+  in
+  aux 0 
 
 let primer_selection_sort_array =
   let test = [|3; 2; 5; 9; 1; 7; 4; 3|] in
