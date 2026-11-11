@@ -28,7 +28,16 @@ type 'a tree =
 
 let leaf x = Node (Empty, x, Empty)
 
-let test_tree = Empty (* Zapišite testni primer *)
+let test_tree = Node(
+  Node (leaf 0, 2, Empty),
+  5,
+  Node (leaf 6, 7, leaf 11)
+)
+
+(* Node
+ levo poddrevo Node(leaf 0, 2, Empty)
+  element 5
+  desno poddrevo Node(leaf 6,7 leaf 11)*)
 
 (*----------------------------------------------------------------------------*
  Funkcija `mirror` vrne prezrcaljeno drevo. Na primeru `test_tree` torej vrne
@@ -40,7 +49,10 @@ let test_tree = Empty (* Zapišite testni primer *)
       11  6   0
 [*----------------------------------------------------------------------------*)
 
-let mirror _ = ()
+let rec mirror drevo = 
+  match drevo with
+  | Empty -> Empty
+  | Node (levo, x, desno) -> Node (mirror desno, x, mirror levo)
 
 let primer_mirror = mirror test_tree
 (* val primer_mirror : int tree =
@@ -52,9 +64,15 @@ let primer_mirror = mirror test_tree
  vseh vozlišč drevesa.
 [*----------------------------------------------------------------------------*)
 
-let height _ = ()
+let rec height drevo = 
+  match drevo with
+  | Empty -> 0
+  | Node (levo, x, desno) -> 1 + max (height levo) (height desno)
 
-let size _ = ()
+let rec size drevo =
+  match drevo with
+  | Empty -> 0
+  | Node (levo, x, desno) -> 1 + size levo + size desno
 
 let primer_height = height test_tree
 (* val primer_height : int = 3 *)
@@ -67,7 +85,10 @@ let primer_size = size test_tree
  drevesa `tree`, preslikane s funkcijo `f`.
 [*----------------------------------------------------------------------------*)
 
-let map_tree _ _ = ()
+let rec map_tree f tree = 
+  match tree with
+  | Empty -> Empty
+  | Node (levo, x, desno) -> Node (map_tree f levo, f x, map_tree f desno)
 
 let primer_map_tree = map_tree ((<) 3) test_tree
 (* val primer_map_tree : bool tree =
@@ -79,7 +100,10 @@ let primer_map_tree = map_tree ((<) 3) test_tree
  naj bo takšen, da v primeru dvojiškega iskalnega drevesa vrne urejen seznam.
 [*----------------------------------------------------------------------------*)
 
-let list_of_tree _ = ()
+let rec list_of_tree drevo = 
+  match drevo with
+  | Empty -> []
+  | Node (levo, x, desno) -> list_of_tree levo @ [x] @ list_of_tree desno
 
 let primer_list_of_tree = list_of_tree test_tree
 (* val primer_list_of_tree : int list = [0; 2; 5; 6; 7; 11] *)
@@ -90,7 +114,40 @@ let primer_list_of_tree = list_of_tree test_tree
  torej drevo npr. ni oblike `Node (leaf 1, 1, leaf 2)`. Prazno drevo je BST.
 [*----------------------------------------------------------------------------*)
 
-let is_bst _ = ()
+let is_bst drevo = 
+  let rec is_list_sorted seznam = 
+    match seznam with
+    | [] | _ :: [] -> true
+    | x :: y :: rest -> 
+      if x <= y then is_list_sorted (y :: rest) else false
+  in
+  list_of_tree drevo |> is_list_sorted
+
+let is_bst2 drevo = 
+  let rec aux tree =
+    match tree with
+    | Empty -> failwith "Do sem ne moremo"
+    | Node (Empty, x, Empty) -> (x, true, x)
+    | Node (Empty, x, desno) -> 
+      let min_desni, bst_desni, max_desni = aux desno in
+      (x, bst_desni && (x < min_desni), max_desni)
+    | Node (levo, x, Empty) ->
+      let min_levi, bst_levi, max_levi = aux levo in 
+      (min_levi, bst_levi && (x > max_levi), x)
+    | Node (levo, x, desno) -> 
+      let min_levi, bst_levi, max_levi = aux levo in 
+      let min_desni, bst_desni, max_desni = aux desno in
+      (
+        min_levi,
+        bst_levi && bst_desni && (x > max_levi) && (x < min_desni), 
+        max_desni
+      )
+  in
+  match drevo with
+  | Empty -> true
+  | tree -> 
+    let _, bst, _ = aux tree in
+    bst
 
 let primer_is_bst = is_bst test_tree
 (* val primer_is_bst : bool = true *)
@@ -109,9 +166,21 @@ let primer_is_bst_2 = test_tree |> mirror |> is_bst
  `member` preveri, ali je dani element v iskalnem drevesu.
 [*----------------------------------------------------------------------------*)
 
-let insert _ _ = ()
+let rec insert element drevo = 
+  match drevo with
+  | Empty -> Node (Empty, element, Empty)
+  | Node (levo, x, desno) ->
+    if element < x then Node (insert element levo, x, desno)
+    else Node (levo, x, insert element desno)
 
-let member _ _ = ()
+let rec member element drevo = 
+  match drevo with
+  | Empty -> false
+  | Node (levo, x, desno) -> 
+    if element = x then true
+    else 
+      if element < x then member element levo
+      else member element desno
 
 let primer_insert = insert 2 (leaf 4)
 (* val primer_insert : int tree = Node (Node (Empty, 2, Empty), 4, Empty) *)
@@ -126,7 +195,10 @@ let primer_member = member 3 test_tree
  funkcije `member2` na drevesu z `n` vozlišči, ki ima globino `log n`.
 [*----------------------------------------------------------------------------*)
 
-let member2 _ _ = ()
+let rec member2 element drevo = 
+  match drevo with
+  | Empty -> false
+  | Node (levo, x, desno) -> element = x || member2 element levo || member2 element desno
 
 let primer_member2 = member2 3 test_tree
 (* val primer_member2 : bool = false *)
@@ -138,9 +210,16 @@ let primer_member2 = member2 3 test_tree
  manjši od korena, če obstaja.
 [*----------------------------------------------------------------------------*)
 
-let succ _ = ()
+let succ drevo = 
+  match drevo with
+  | Empty -> None
+  | Node (levo, x, desno) -> 
+    let seznam_desne = list_of_tree desno in
+    match seznam_desne with
+    | [] -> None
+    | x :: rest -> Some x
 
-let pred _ = ()
+let pred drevo = succ (mirror drevo)
 
 let primer_succ = succ test_tree
 (* val primer_succ : int option = Some 6 *)

@@ -76,6 +76,9 @@ let primer_min_and_rest = min_and_rest [3; 1; 2; 1]
 
 let selection_sort _ = ()
 
+
+(*O(k) kličeš O(n)krat torej je O(n^^2)*)
+
 let primer_selection_sort = selection_sort [3; 2; 5; 9; 1; 7; 4; 3]
 (* val primer_selection_sort : int list = [1; 2; 3; 3; 4; 5; 7; 9] *)
 
@@ -85,7 +88,9 @@ let primer_selection_sort = selection_sort [3; 2; 5; 9; 1; 7; 4; 3]
  podseznama dodali z `@`? Ali bi se s tem spremenila časovna zahtevnost
  urejanja?
 [*----------------------------------------------------------------------------*)
+let selection_sort_at a = ()
 
+(* @ je dražja *)
 (*----------------------------------------------------------------------------*
  ## Urejanje z izbiranjem na tabelah
 
